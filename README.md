@@ -1,7 +1,12 @@
 # Swift2MD
 
-Swift2MD is a lightweight Swift package and CLI for converting URLs or local documents into Markdown using [**Cloudflare Workers AI `toMarkdown()`**](https://developers.cloudflare.com/workers-ai/features/markdown-conversion/).
+[![](https://img.shields.io/github/v/tag/herrkaefer/Swift2MD?label=version)](https://github.com/herrkaefer/Swift2MD/tags)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fherrkaefer%2FSwift2MD%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/herrkaefer/Swift2MD)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fherrkaefer%2FSwift2MD%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/herrkaefer/Swift2MD)
+[![](https://img.shields.io/badge/platforms-macOS%2013%2B%20%7C%20iOS%2016%2B-0A84FF)](https://swiftpackageindex.com/herrkaefer/Swift2MD)
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
+Swift2MD is a lightweight Swift package and CLI for converting URLs or local documents into Markdown using [**Cloudflare Workers AI `toMarkdown()`**](https://developers.cloudflare.com/workers-ai/features/markdown-conversion/).
 
 ## What It Does
 
@@ -28,7 +33,7 @@ https://developers.cloudflare.com/workers-ai/features/markdown-conversion/#suppo
 In `Package.swift`:
 
 ```swift
-.package(url: "<your-repo-url>", from: "0.1.0")
+.package(url: "https://github.com/herrkaefer/Swift2MD.git", from: "0.1.0")
 ```
 
 Then add to your target dependencies:
@@ -141,7 +146,7 @@ Before submitting to SPI, verify:
 
 - The repository is publicly accessible.
 - The package URL uses a full Git URL with protocol and `.git` suffix, for example:
-  - `https://github.com/<owner>/Swift2MD.git`
+  - `https://github.com/herrkaefer/Swift2MD.git`
 - At least one semantic version tag exists (this repo includes `v0.1.0`).
 - `swift package dump-package` succeeds.
 - `swift build` succeeds.
