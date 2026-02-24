@@ -134,3 +134,14 @@ Integration test is opt-in with environment variables:
 - `CLOUDFLARE_ACCOUNT_ID`
 - `CLOUDFLARE_API_TOKEN`
 - `SWIFT2MD_INTEGRATION_FILE`
+
+## Swift Package Index Submission Checklist
+
+Before submitting to SPI, verify:
+
+- The repository is publicly accessible.
+- The package URL uses a full Git URL with protocol and `.git` suffix, for example:
+  - `https://github.com/<owner>/Swift2MD.git`
+- At least one semantic version tag exists (this repo includes `v0.1.0`).
+- `swift package dump-package` succeeds.
+- `swift build` succeeds.
