@@ -7,11 +7,21 @@ struct CloudflareClient: Sendable {
     let credentials: CloudflareCredentials
     let session: URLSession
     let timeout: Duration
+    let maxRetryCount: Int
+    let retryBaseDelay: Duration
 
-    init(credentials: CloudflareCredentials, session: URLSession = .shared, timeout: Duration = .seconds(60)) {
+    init(
+        credentials: CloudflareCredentials,
+        session: URLSession = .shared,
+        timeout: Duration = .seconds(60),
+        maxRetryCount: Int = 2,
+        retryBaseDelay: Duration = .milliseconds(300)
+    ) {
         self.credentials = credentials
         self.session = session
         self.timeout = timeout
+        self.maxRetryCount = max(0, maxRetryCount)
+        self.retryBaseDelay = retryBaseDelay
     }
 
     func toMarkdown(files: [(data: Data, filename: String)]) async throws -> [ConversionResult] {
@@ -33,37 +43,91 @@ struct CloudflareClient: Sendable {
         request.setValue(multipart.contentType, forHTTPHeaderField: "Content-Type")
         request.httpBody = multipart.finalize()
 
-        let data: Data
-        let response: URLResponse
+        var attempt = 0
 
-        do {
-            (data, response) = try await session.data(for: request)
-        } catch {
-            throw Swift2MDError.networkError(underlying: error)
-        }
+        while true {
+            do {
+                let (data, response) = try await session.data(for: request)
 
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw Swift2MDError.invalidResponse
-        }
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    throw Swift2MDError.invalidResponse
+                }
 
-        let responseBody = String(data: data, encoding: .utf8) ?? ""
-        guard (200...299).contains(httpResponse.statusCode) else {
-            throw Swift2MDError.httpError(statusCode: httpResponse.statusCode, body: responseBody)
-        }
+                let responseBody = String(data: data, encoding: .utf8) ?? ""
+                guard (200...299).contains(httpResponse.statusCode) else {
+                    if shouldRetry(statusCode: httpResponse.statusCode, attempt: attempt) {
+                        throw RetryableRequestError()
+                    }
+                    throw Swift2MDError.httpError(statusCode: httpResponse.statusCode, body: responseBody)
+                }
 
-        do {
-            let decoded = try JSONDecoder().decode(APIEnvelope.self, from: data)
-            guard decoded.success else {
-                let messages = decoded.errors.map(\.message) + decoded.messages.map(\.message)
-                throw Swift2MDError.apiError(messages: messages)
+                do {
+                    let decoded = try JSONDecoder().decode(APIEnvelope.self, from: data)
+                    guard decoded.success else {
+                        let messages = decoded.errors.map(\.message) + decoded.messages.map(\.message)
+                        throw Swift2MDError.apiError(messages: messages)
+                    }
+                    return decoded.result
+                } catch let error as Swift2MDError {
+                    throw error
+                } catch {
+                    throw Swift2MDError.invalidResponse
+                }
+            } catch is RetryableRequestError {
+                try await sleepBeforeRetry(attempt: attempt)
+                attempt += 1
+                continue
+            } catch let error as Swift2MDError {
+                throw error
+            } catch {
+                if shouldRetry(networkError: error, attempt: attempt) {
+                    try await sleepBeforeRetry(attempt: attempt)
+                    attempt += 1
+                    continue
+                }
+                throw Swift2MDError.networkError(underlying: error)
             }
-            return decoded.result
-        } catch let error as Swift2MDError {
-            throw error
-        } catch {
-            throw Swift2MDError.invalidResponse
         }
     }
+
+    private func shouldRetry(statusCode: Int, attempt: Int) -> Bool {
+        guard attempt < maxRetryCount else { return false }
+        return statusCode == 429 || statusCode >= 500
+    }
+
+    private func shouldRetry(networkError: Error, attempt: Int) -> Bool {
+        guard attempt < maxRetryCount else { return false }
+        if networkError is CancellationError { return false }
+
+        guard let urlError = networkError as? URLError else { return false }
+        switch urlError.code {
+        case .timedOut,
+             .cannotFindHost,
+             .cannotConnectToHost,
+             .networkConnectionLost,
+             .dnsLookupFailed,
+             .notConnectedToInternet,
+             .internationalRoamingOff,
+             .callIsActive,
+             .dataNotAllowed,
+             .resourceUnavailable:
+            return true
+        default:
+            return false
+        }
+    }
+
+    private func sleepBeforeRetry(attempt: Int) async throws {
+        let baseSeconds = max(0, retryBaseDelay.timeInterval)
+        guard baseSeconds > 0 else { return }
+
+        let delaySeconds = baseSeconds * pow(2.0, Double(attempt))
+        let delayNanoseconds = UInt64(min(delaySeconds * 1_000_000_000, Double(UInt64.max)))
+        try await Task.sleep(nanoseconds: delayNanoseconds)
+    }
+}
+
+private struct RetryableRequestError: Error {
 }
 
 private struct APIEnvelope: Decodable {

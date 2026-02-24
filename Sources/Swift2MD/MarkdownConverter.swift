@@ -15,7 +15,13 @@ public struct MarkdownConverter: Sendable {
         configuration.timeoutIntervalForResource = options.timeout.timeInterval
         let session = URLSession(configuration: configuration)
 
-        self.client = CloudflareClient(credentials: credentials, session: session, timeout: options.timeout)
+        self.client = CloudflareClient(
+            credentials: credentials,
+            session: session,
+            timeout: options.timeout,
+            maxRetryCount: options.maxRetryCount,
+            retryBaseDelay: options.retryBaseDelay
+        )
         self.downloadSession = session
     }
 

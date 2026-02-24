@@ -18,10 +18,20 @@ public struct CloudflareCredentials: Sendable {
 public struct ConvertOptions: Sendable {
     /// Timeout applied to HTTP requests and resource downloads.
     public var timeout: Duration
+    /// Number of retry attempts for retryable API failures (429/5xx and transient network errors).
+    public var maxRetryCount: Int
+    /// Base backoff delay used between retries. Delay doubles after each failed attempt.
+    public var retryBaseDelay: Duration
 
     /// Creates conversion options with an optional request timeout.
-    public init(timeout: Duration = .seconds(60)) {
+    public init(
+        timeout: Duration = .seconds(60),
+        maxRetryCount: Int = 2,
+        retryBaseDelay: Duration = .milliseconds(300)
+    ) {
         self.timeout = timeout
+        self.maxRetryCount = max(0, maxRetryCount)
+        self.retryBaseDelay = retryBaseDelay
     }
 }
 

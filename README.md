@@ -1,6 +1,7 @@
 # Swift2MD
 
 [![](https://img.shields.io/github/v/tag/herrkaefer/Swift2MD?label=version)](https://github.com/herrkaefer/Swift2MD/tags)
+[![CI](https://github.com/herrkaefer/Swift2MD/actions/workflows/ci.yml/badge.svg)](https://github.com/herrkaefer/Swift2MD/actions/workflows/ci.yml)
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fherrkaefer%2FSwift2MD%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/herrkaefer/Swift2MD)
 [![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fherrkaefer%2FSwift2MD%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/herrkaefer/Swift2MD)
 [![](https://img.shields.io/badge/platforms-macOS%2013%2B%20%7C%20iOS%2016%2B-0A84FF)](https://swiftpackageindex.com/herrkaefer/Swift2MD)
@@ -20,6 +21,12 @@ Swift2MD is a lightweight Swift package and CLI for converting URLs or local doc
 - Swift 5.9+
 - A Cloudflare account
 - A Cloudflare API token that can call Workers AI
+
+## Reliability Defaults
+
+- API calls retry up to `2` times on retryable failures (`429`, `5xx`, and transient network errors).
+- Backoff is exponential with a default base delay of `300ms`.
+- You can override both values with `ConvertOptions`.
 
 ## Supported Input Formats
 
@@ -52,7 +59,14 @@ let credentials = CloudflareCredentials(
     apiToken: "<CLOUDFLARE_API_TOKEN>"
 )
 
-let converter = MarkdownConverter(credentials: credentials)
+let converter = MarkdownConverter(
+    credentials: credentials,
+    options: ConvertOptions(
+        timeout: .seconds(60),
+        maxRetryCount: 2,
+        retryBaseDelay: .milliseconds(300)
+    )
+)
 
 // Convert remote URL
 let urlResult = try await converter.convert(URL(string: "https://example.com/file.pdf")!)
@@ -132,6 +146,8 @@ swift build
 swift test
 swift run swift2md --help
 ```
+
+See [CHANGELOG.md](CHANGELOG.md) for release history.
 
 Integration test is opt-in with environment variables:
 
