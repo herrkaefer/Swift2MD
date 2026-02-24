@@ -25,7 +25,7 @@ Swift2MD is a lightweight Swift package and CLI for converting URLs or local doc
 ## Reliability Defaults
 
 - API calls retry up to `2` times on retryable failures (`429`, `5xx`, and transient network errors).
-- Backoff is exponential with a default base delay of `300ms`.
+- Backoff is exponential with a default base delay of `1s`.
 - You can override both values with `ConvertOptions`.
 
 ## Supported Input Formats
@@ -64,7 +64,7 @@ let converter = MarkdownConverter(
     options: ConvertOptions(
         timeout: .seconds(60),
         maxRetryCount: 2,
-        retryBaseDelay: .milliseconds(300)
+        retryBaseDelay: .seconds(1)
     )
 )
 

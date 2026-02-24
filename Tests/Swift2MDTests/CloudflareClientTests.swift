@@ -149,7 +149,7 @@ final class CloudflareClientTests: XCTestCase {
             session: session,
             timeout: .seconds(10),
             maxRetryCount: 2,
-            retryBaseDelay: .milliseconds(1)
+            retryBaseDelay: .seconds(0)
         )
 
         let results = try await client.toMarkdown(files: [(data: Data([0x01]), filename: "file.pdf")])
@@ -197,7 +197,7 @@ final class CloudflareClientTests: XCTestCase {
             session: session,
             timeout: .seconds(10),
             maxRetryCount: 2,
-            retryBaseDelay: .milliseconds(1)
+            retryBaseDelay: .seconds(0)
         )
 
         let results = try await client.toMarkdown(files: [(data: Data([0x01]), filename: "file.pdf")])
@@ -225,7 +225,7 @@ final class CloudflareClientTests: XCTestCase {
             session: session,
             timeout: .seconds(10),
             maxRetryCount: 1,
-            retryBaseDelay: .milliseconds(1)
+            retryBaseDelay: .seconds(0)
         )
 
         do {

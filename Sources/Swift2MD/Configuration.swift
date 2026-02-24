@@ -27,7 +27,7 @@ public struct ConvertOptions: Sendable {
     public init(
         timeout: Duration = .seconds(60),
         maxRetryCount: Int = 2,
-        retryBaseDelay: Duration = .milliseconds(300)
+        retryBaseDelay: Duration = .seconds(1)
     ) {
         self.timeout = timeout
         self.maxRetryCount = max(0, maxRetryCount)

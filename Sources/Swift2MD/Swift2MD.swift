@@ -10,7 +10,7 @@ public extension MarkdownConverter {
         apiToken: String,
         timeout: Duration = .seconds(60),
         maxRetryCount: Int = 2,
-        retryBaseDelay: Duration = .milliseconds(300)
+        retryBaseDelay: Duration = .seconds(1)
     ) -> MarkdownConverter {
         let credentials = CloudflareCredentials(accountId: accountId, apiToken: apiToken)
         let options = ConvertOptions(
